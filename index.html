@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Do you Love me?</title>
+<meta name="description" content="Try to click No — trick buttons! Share the link and make someone smile ❤️" />
+<style>
+  :root{
+    --bg:#fff0f6;
+    --accent:#ff4d79;
+    --muted:#6b6b6b;
+  }
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #fff0f6 0%, #fff6f8 100%);
+    overflow:hidden;
+    color:#222;
+  }
+
+  .card{
+    width:min(640px,94vw);
+    background:rgba(255,255,255,0.78);
+    backdrop-filter: blur(6px);
+    border-radius:20px;
+    padding:28px;
+    box-shadow: 0 10px 30px rgba(255,77,121,0.15);
+    text-align:center;
+    position:relative;
+  }
+
+  h1{
+    margin:0 0 12px 0;
+    font-size:clamp(20px,4.2vw,34px);
+    letter-spacing:0.4px;
+  }
+  p.lead{
+    margin:0 0 20px 0;
+    color:var(--muted);
+    font-size:clamp(13px,2.2vw,16px);
+  }
+
+  .buttons{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+
+  button{
+    border:0;
+    padding:14px 22px;
+    font-size:16px;
+    border-radius:12px;
+    cursor:pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    transition: transform .18s ease, box-shadow .18s ease;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active{ transform:translateY(2px) scale(.99); }
+
+  #yes{
+    background:linear-gradient(90deg,#ff5a8a,#ff8fb3);
+    color:white;
+    font-weight:600;
+  }
+  #no{
+    background:#f3f3f3;
+    color:#333;
+    position:relative;
+  }
+
+  /* Final message screen */
+  .final{
+    padding:18px;
+    border-radius:14px;
+    margin-top:16px;
+    background:linear-gradient(180deg,#fff7fb,#fff1f6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    flex-direction:column;
+  }
+  .final h2{ margin:0; font-size:22px; color:var(--accent); }
+  .final p{ margin:0; color:var(--muted); }
+
+  /* tiny share button */
+  .share-row{ margin-top:14px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+
+  .share{
+    background:transparent;
+    border:1px solid rgba(0,0,0,0.06);
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:14px;
+    cursor:pointer;
+  }
+
+  /* floating hearts container (visual only) */
+  .hearts {
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    z-index:1;
+  }
+
+  .heart {
+    position:absolute;
+    width:18px;
+    height:18px;
+    transform:translate(-50%,-50%) scale(1);
+    opacity:0.95;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 6px 12px rgba(255,77,121,0.18));
+  }
+
+  /* small responsive tweaks */
+  @media (max-width:420px){
+    .card{ padding:20px; border-radius:16px; }
+    button{ padding:12px 18px; font-size:15px; }
+  }
+</style>
+</head>
+<body>
+  <div class="hearts" aria-hidden="true"></div>
+
+  <main class="card" role="main" aria-labelledby="q">
+    <h1 id="q">Do you Love me</h1>
+    <p class="lead" id="leadText">Try to click <strong>No</strong> — it's trickier than you think 😏</p>
+
+    <div class="buttons" id="btns">
+      <button id="yes" aria-label="Yes">Yes 💖</button>
+      <button id="no" aria-label="No">No 💔</button>
+    </div>
+
+    <div class="final" id="final">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 21s-7-4.35-9.2-6.64C-0.8 10 5 4 12 8c7-4 12.2 2 9.2 6.36C19 16.65 12 21 12 21z" fill="#ff4d79"/>
+      </svg>
+      <h2>Aww I love you too</h2>
+      <p>💞 You made my day — share this and make someone smile!</p>
+
+      <div class="share-row">
+        <button class="share" id="copyLink">Copy link</button>
+        <button class="share" id="shareNative">Share</button>
+      </div>
+    </div>
+  </main>
+
+<script>
+/* ====== Config ====== */
+const questionText = "Do you Love me";
+const yesText = "Yes 💖";
+const noText = "No 💔";
+const finalTitle = "Aww I love you too";
+const finalSubtitle = "💞 You made my day — share this and make someone smile!";
+
+/* playful phrases to show when No is attempted */
+const teasingPhrases = [
+  "Are you sure? 🥺",
+  "Think again 😏",
+  "Please manja 😢",
+  "Please yaar, haan bol 😘",
+  "Don't break my heart 💔",
+  "No toh nahi na? 🙏",
+  "Sochlo thoda... ❤️",
+  "Arey, give it one more thought 😉"
+];
+
+/* ====== Elements ====== */
+const noBtn = document.getElementById('no');
+const yesBtn = document.getElementById('yes');
+const final = document.getElementById('final');
+const card = document.querySelector('.card');
+const heartsLayer = document.querySelector('.hearts');
+const copyBtn = document.getElementById('copyLink');
+const shareNative = document.getElementById('shareNative');
+const leadText = document.getElementById('leadText');
+
+document.getElementById('q').innerText = questionText;
+yesBtn.innerText = yesText;
+noBtn.innerText = noText;
+final.querySelector('h2').innerText = finalTitle;
+final.querySelector('p').innerText = finalSubtitle;
+
+/* helper: set playful lead text randomly (optionally revert later) */
+let lastTeaseIndex = -1;
+function setRandomTease() {
+  // pick a different phrase than last time
+  let idx = Math.floor(Math.random() * teasingPhrases.length);
+  if (idx === lastTeaseIndex) idx = (idx + 1) % teasingPhrases.length;
+  lastTeaseIndex = idx;
+  leadText.innerHTML = `<strong>${teasingPhrases[idx]}</strong>`;
+}
+
+/* ====== No-dodge behavior ====== */
+/* Make it dodge on hover and on touch, keep it inside viewport */
+function randomPositionAvoiding(el){
+  const pad = 12;
+  const w = window.innerWidth - pad*2;
+  const h = window.innerHeight - pad*2;
+  const x = Math.random() * w + pad;
+  const y = Math.random() * h + pad;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.position = 'absolute';
+}
+
+/* initial random place for "No" on load (so mobile users can't immediately tap it) */
+randomPositionAvoiding(noBtn);
+
+/* On pointer enter, move it quickly and change the lead text */
+noBtn.addEventListener('pointerenter', () => {
+  for(let i=0;i<2;i++){
+    setTimeout(() => randomPositionAvoiding(noBtn), i*70 + Math.random()*110);
+  }
+  setRandomTease();
+});
+
+/* On touchstart, also move it (mobile) and tease */
+noBtn.addEventListener('touchstart', (e)=>{
+  e.preventDefault();
+  for(let i=0;i<2;i++){
+    setTimeout(() => randomPositionAvoiding(noBtn), i*70 + Math.random()*110);
+  }
+  setRandomTease();
+});
+
+/* extra: if user tries to click programmatically or mouse-down close enough, bounce away */
+noBtn.addEventListener('mousedown', (e)=>{
+  e.preventDefault();
+  randomPositionAvoiding(noBtn);
+  setRandomTease();
+});
+
+/* If user focuses (keyboard), gently move and tease */
+noBtn.addEventListener('focus', ()=> {
+  setTimeout(()=> {
+    randomPositionAvoiding(noBtn);
+    setRandomTease();
+  }, 90);
+});
+
+/* ====== Yes clicked: show final message + hearts ====== */
+yesBtn.addEventListener('click', () => {
+  const btns = document.getElementById('btns');
+  btns.style.transition = 'opacity .25s ease';
+  btns.style.opacity = 0;
+  setTimeout(()=> btns.style.display = 'none', 260);
+
+  final.style.display = 'flex';
+  final.style.opacity = 0;
+  final.style.transform = 'translateY(8px)';
+  setTimeout(()=>{ final.style.transition = 'opacity .35s ease, transform .35s ease'; final.style.opacity = 1; final.style.transform = 'translateY(0)'; }, 60);
+
+  spawnHearts(26);
+});
+
+/* ====== Share / copy link ====== */
+copyBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(location.href);
+    copyBtn.innerText = 'Link copied!';
+    setTimeout(()=> copyBtn.innerText = 'Copy link', 1500);
+  } catch (err) {
+    copyBtn.innerText = 'Unable to copy';
+  }
+});
+
+shareNative.addEventListener('click', async () => {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: document.title,
+        text: "Try this — it's cute! 💖",
+        url: location.href
+      });
+    } catch(e){}
+  } else {
+    await navigator.clipboard.writeText(location.href);
+    shareNative.innerText = 'Link copied';
+    setTimeout(()=> shareNative.innerText = 'Share', 1400);
+  }
+});
+
+/* ====== Floating hearts generator ====== */
+function spawnHearts(count=12){
+  const colors = ['#ff5a8a','#ff83a9','#ffb3d0','#ff4d79'];
+  for(let i=0;i<count;i++){
+    createHeart(colors[Math.floor(Math.random()*colors.length)]);
+  }
+}
+
+function createHeart(color){
+  const el = document.createElement('div');
+  el.className = 'heart';
+  const size = 12 + Math.random()*28;
+  el.style.width = size + 'px';
+  el.style.height = size + 'px';
+  const startX = window.innerWidth/2 + (Math.random()-0.5)*120;
+  const startY = window.innerHeight/2 + (Math.random()-0.5)*40;
+  el.style.left = startX + 'px';
+  el.style.top = startY + 'px';
+
+  el.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="${color}" d="M12 21s-7-4.35-9.2-6.64C-0.8 10 5 4 12 8c7-4 12.2 2 9.2 6.36C19 16.65 12 21 12 21z"/></svg>`;
+  heartsLayer.appendChild(el);
+
+  const duration = 1600 + Math.random()*1400;
+  const travelX = (Math.random()-0.5) * 220;
+  const travelY = - (120 + Math.random()*320);
+  const rotate = (Math.random()-0.5)*70;
+  el.animate([
+    { transform: `translate3d(0,0,0) rotate(0deg) scale(0.8)`, opacity: 1 },
+    { transform: `translate3d(${travelX}px,${travelY}px,0) rotate(${rotate}deg) scale(1.05)`, opacity: 0.06 }
+  ], {
+    duration,
+    easing: 'cubic-bezier(.2,.7,.2,1)'
+  }).onfinish = () => el.remove();
+}
+
+/* gentle floating hearts loop (background) */
+setInterval(()=> {
+  if (Math.random() < 0.45) createHeart('#ffd6e2');
+}, 900);
+
+/* ensure No button stays within window on resize */
+window.addEventListener('resize', ()=> {
+  const rect = noBtn.getBoundingClientRect();
+  if (rect.right < 8 || rect.left > window.innerWidth - 8 || rect.top > window.innerHeight - 8) {
+    noBtn.style.left = (window.innerWidth/2 + (Math.random()-0.5)*150) + 'px';
+    noBtn.style.top = (window.innerHeight/2 + (Math.random()-0.5)*40) + 'px';
+  }
+});
+</script>
+</body>
+</html>
