@@ -12,6 +12,7 @@
     display:flex; align-items:center; justify-content:center;
     height:100vh;
     overflow:hidden;
+    position: relative;
   }
   .card {
     background: rgba(255,255,255,0.85);
@@ -21,6 +22,7 @@
     max-width: 90vw;
     box-shadow: 0 12px 25px rgba(255,77,121,0.25);
     position: relative;
+    z-index:2;
   }
   h1 { font-size: 26px; margin-bottom:12px; color:#ff4d79;}
   p { color:#555; margin-bottom:20px; font-size:16px;}
@@ -31,14 +33,15 @@
   #yes { background: linear-gradient(90deg,#ff5a8a,#ff8fb3); color:white; font-weight:600;}
   #no { background:#ccc; color:#333;}
   .final { display:none; flex-direction:column; align-items:center; gap:10px; margin-top:16px;}
-  .hearts { position:fixed; inset:0; pointer-events:none; }
+  .hearts, .bgHearts { position:fixed; inset:0; pointer-events:none; z-index:1; }
   .heart { position:absolute; font-size:20px; }
 </style>
 </head>
 <body>
+<div class="bgHearts"></div>
 <div class="hearts"></div>
 <div class="card">
-  <h1>Do you Love me?</h1>
+  <h1>Be honest… do you love me? ❤️</h1>
   <p id="lead">Try to click No 😏</p>
   <div id="buttons">
     <button id="yes">Yes 💖</button>
@@ -57,6 +60,7 @@ const noBtn = document.getElementById('no');
 const final = document.getElementById('final');
 const buttons = document.getElementById('buttons');
 const heartsLayer = document.querySelector('.hearts');
+const bgHeartsLayer = document.querySelector('.bgHearts');
 const leadText = document.getElementById('lead');
 
 // Playful phrases for No hover
@@ -72,20 +76,20 @@ const phrases = [
 const emojis = ['❤️','⭐','🌸','🍫'];
 
 // Function to spawn hearts
-function spawnHeart(x,y){
+function spawnHeart(x,y,layer){
   const heart = document.createElement('div');
   heart.className='heart';
   heart.innerText = emojis[Math.floor(Math.random()*emojis.length)];
   heart.style.left = x + 'px';
   heart.style.top = y + 'px';
   heart.style.fontSize = (14+Math.random()*16)+'px';
-  heartsLayer.appendChild(heart);
+  layer.appendChild(heart);
   let start = Date.now();
-  let duration = 2000 + Math.random()*1000;
+  let duration = 4000 + Math.random()*3000;
   (function animate(){
     let now = Date.now();
     let progress = (now - start)/duration;
-    heart.style.top = parseInt(heart.style.top) - progress*150 + 'px';
+    heart.style.top = parseInt(heart.style.top) - progress*300 + 'px';
     heart.style.opacity = 1-progress;
     if(progress<1) requestAnimationFrame(animate);
     else heart.remove();
@@ -95,13 +99,11 @@ function spawnHeart(x,y){
 // No button playful effect
 noBtn.addEventListener('mouseenter', ()=>{
   leadText.innerText = phrases[Math.floor(Math.random()*phrases.length)];
-  // Blink effect
   noBtn.style.transform = 'scale(1.2)';
   setTimeout(()=> noBtn.style.transform='scale(1)',200);
-  // Spawn hearts near No button
   const rect = noBtn.getBoundingClientRect();
   for(let i=0;i<3;i++){
-    spawnHeart(rect.left + Math.random()*rect.width, rect.top + Math.random()*rect.height);
+    spawnHeart(rect.left + Math.random()*rect.width, rect.top + Math.random()*rect.height, heartsLayer);
   }
 });
 
@@ -113,7 +115,7 @@ noBtn.addEventListener('touchstart',(e)=>{
   setTimeout(()=> noBtn.style.transform='scale(1)',200);
   const rect = noBtn.getBoundingClientRect();
   for(let i=0;i<3;i++){
-    spawnHeart(rect.left + Math.random()*rect.width, rect.top + Math.random()*rect.height);
+    spawnHeart(rect.left + Math.random()*rect.width, rect.top + Math.random()*rect.height, heartsLayer);
   }
 });
 
@@ -122,10 +124,20 @@ yesBtn.addEventListener('click', ()=>{
   buttons.style.display='none';
   final.style.display='flex';
   for(let i=0;i<25;i++){
-    spawnHeart(window.innerWidth/2 + (Math.random()-0.5)*200, window.innerHeight/2 + (Math.random()-0.5)*50);
+    spawnHeart(window.innerWidth/2 + (Math.random()-0.5)*200, window.innerHeight/2 + (Math.random()-0.5)*50, heartsLayer);
   }
 });
+
+// Background floating hearts continuously
+setInterval(()=>{
+  const x = Math.random()*window.innerWidth;
+  const y = window.innerHeight + 20;
+  spawnHeart(x,y,bgHeartsLayer);
+},300);
+
 </script>
 </body>
 </html>
+
+
 
