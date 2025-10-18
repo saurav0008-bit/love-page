@@ -45,7 +45,7 @@
     <button id="no">No 💔</button>
   </div>
   <div class="final" id="final">
-    <h2>Aww I love you too 💞</h2>
+    <h2>Aww I love you too Dhiwangkshi 💞</h2>
     <p>Share this link and make someone smile!</p>
   </div>
 </div>
@@ -59,7 +59,7 @@ const buttons = document.getElementById('buttons');
 const heartsLayer = document.querySelector('.hearts');
 const leadText = document.getElementById('lead');
 
-// Playful phrases for No click
+// Playful phrases for No hover
 const phrases = [
   "Are you sure? 🥺",
   "Think again 😏",
@@ -68,44 +68,64 @@ const phrases = [
   "Please haan bol 😘"
 ];
 
-// Hide No button on click + change lead text
-noBtn.addEventListener('click', ()=>{
-  noBtn.style.display='none';
+// Emojis for floating hearts/fun
+const emojis = ['❤️','⭐','🌸','🍫'];
+
+// Function to spawn hearts
+function spawnHeart(x,y){
+  const heart = document.createElement('div');
+  heart.className='heart';
+  heart.innerText = emojis[Math.floor(Math.random()*emojis.length)];
+  heart.style.left = x + 'px';
+  heart.style.top = y + 'px';
+  heart.style.fontSize = (14+Math.random()*16)+'px';
+  heartsLayer.appendChild(heart);
+  let start = Date.now();
+  let duration = 2000 + Math.random()*1000;
+  (function animate(){
+    let now = Date.now();
+    let progress = (now - start)/duration;
+    heart.style.top = parseInt(heart.style.top) - progress*150 + 'px';
+    heart.style.opacity = 1-progress;
+    if(progress<1) requestAnimationFrame(animate);
+    else heart.remove();
+  })();
+}
+
+// No button playful effect
+noBtn.addEventListener('mouseenter', ()=>{
   leadText.innerText = phrases[Math.floor(Math.random()*phrases.length)];
+  // Blink effect
+  noBtn.style.transform = 'scale(1.2)';
+  setTimeout(()=> noBtn.style.transform='scale(1)',200);
+  // Spawn hearts near No button
+  const rect = noBtn.getBoundingClientRect();
+  for(let i=0;i<3;i++){
+    spawnHeart(rect.left + Math.random()*rect.width, rect.top + Math.random()*rect.height);
+  }
+});
+
+// Also on touch (mobile)
+noBtn.addEventListener('touchstart',(e)=>{
+  e.preventDefault();
+  leadText.innerText = phrases[Math.floor(Math.random()*phrases.length)];
+  noBtn.style.transform = 'scale(1.2)';
+  setTimeout(()=> noBtn.style.transform='scale(1)',200);
+  const rect = noBtn.getBoundingClientRect();
+  for(let i=0;i<3;i++){
+    spawnHeart(rect.left + Math.random()*rect.width, rect.top + Math.random()*rect.height);
+  }
 });
 
 // Yes button click → show final + hearts
 yesBtn.addEventListener('click', ()=>{
   buttons.style.display='none';
   final.style.display='flex';
-  spawnHearts(25);
-});
-
-// Heart / emoji animation
-const emojis = ['❤️','⭐','🌸','🍫'];
-function spawnHearts(count){
-  for(let i=0;i<count;i++){
-    const heart = document.createElement('div');
-    heart.className='heart';
-    heart.innerText = emojis[Math.floor(Math.random()*emojis.length)];
-    heart.style.left = (50 + Math.random()*20-10)+'vw';
-    heart.style.top = '80vh';
-    heart.style.fontSize = (14+Math.random()*16)+'px';
-    heartsLayer.appendChild(heart);
-    let start = Date.now();
-    let duration = 2000 + Math.random()*1000;
-    (function animate(){
-      let now = Date.now();
-      let progress = (now - start)/duration;
-      heart.style.top = 80 - progress*90 + 'vh';
-      heart.style.opacity = 1-progress;
-      if(progress<1) requestAnimationFrame(animate);
-      else heart.remove();
-    })();
+  for(let i=0;i<25;i++){
+    spawnHeart(window.innerWidth/2 + (Math.random()-0.5)*200, window.innerHeight/2 + (Math.random()-0.5)*50);
   }
-}
+});
 </script>
 </body>
 </html>
-
 
